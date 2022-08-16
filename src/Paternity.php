@@ -1,6 +1,6 @@
 <?php
 
-namespace Jangkardev\Paternity;
+namespace Jangkardev\Package;
 
 class Paternity
 {
