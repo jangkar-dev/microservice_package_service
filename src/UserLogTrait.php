@@ -2,9 +2,6 @@
 
 namespace App\Traits;
 
-use App\Models\User;
-use App\Models\Team;
-
 trait UserLogTrait
 {
     //query builder
