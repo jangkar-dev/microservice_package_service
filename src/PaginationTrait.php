@@ -17,7 +17,7 @@ trait PaginationTrait
     public function numeration($perPage = null)
     {
         $perPage = $perPage ?? $this->per_page_request;
-        return ($perPage == 'all' || $perPage == 0) ? $this->get() : $this->simplePaginate((int)$perPage);
+        return ($perPage == 'all' || $perPage == 0) ? $this->get() : $this->paginate((int)$perPage);
     }
     /**
      * It returns all the results if the perPage parameter is set to 'all' or 0, otherwise it returns a
@@ -31,6 +31,6 @@ trait PaginationTrait
     public function scopeNumeration($query, $perPage = null)
     {
         $perPage = $perPage ?? $this->per_page_request;
-        return ($perPage == 'all' || $perPage == 0) ? $query->get() : $query->simplePaginate((int)$perPage);
+        return ($perPage == 'all' || $perPage == 0) ? $query->get() : $query->paginate((int)$perPage);
     }
 }
