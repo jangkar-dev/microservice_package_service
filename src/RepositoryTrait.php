@@ -25,6 +25,12 @@ trait RepositoryTrait
         return (new static)->setModel($model);
     }
 
+    public function compact($request)
+    {
+        $this->request = $request;
+        return $this;
+    }
+    
     public static function request($request)
     {
         $request = is_array($request) ? new Request($request) : $request;
