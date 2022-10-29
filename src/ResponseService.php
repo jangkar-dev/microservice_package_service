@@ -15,10 +15,14 @@ class ResponseService
         return true;
     }
 
-    static function json($payload, $status)
+    static function json($payload, $status, $data = null)
     {
-        return response()->json([
+        $response = [
             'message' => ucfirst($payload) . ' ' . Response::$statusTexts[$status]
-        ], $status);
+        ];
+        if($data !== null) {
+            $response['data'] = $data;
+        }
+        return response()->json($response, $status);
     }
 }
