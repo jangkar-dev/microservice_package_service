@@ -90,9 +90,9 @@ trait RepositoryTrait
         $words = $this->getModuleName();
         DB::beginTransaction();
         try {
-            $this->store($request);
+            $stored = $this->store($request);
             DB::commit();
-            return ResponseService::json($words, Response::HTTP_CREATED);
+            return ResponseService::json($words, Response::HTTP_CREATED, $stored);
         } catch (\Throwable $th) {
             report($th);
             DB::rollBack();
@@ -105,9 +105,9 @@ trait RepositoryTrait
         $words = 'Update ' . $this->getModuleName();
         DB::beginTransaction();
         try {
-            $this->update($request);
+            $updated = $this->update($request);
             DB::commit();
-            return ResponseService::json($words, Response::HTTP_OK);
+            return ResponseService::json($words, Response::HTTP_OK, $updated);
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
