@@ -3,10 +3,12 @@
 namespace App\Traits;
 
 use App\Http\Requests\FormRequest;
+use App\Models\Bridging;
 use App\Services\ResponseService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 trait RepositoryTrait
@@ -30,7 +32,7 @@ trait RepositoryTrait
         $this->request = $request;
         return $this;
     }
-    
+
     public static function request($request)
     {
         $request = is_array($request) ? new Request($request) : $request;
@@ -100,12 +102,12 @@ trait RepositoryTrait
         }
     }
 
-    public function executeUpdate($request)
+    public function executeUpdate()
     {
         $words = 'Update ' . $this->getModuleName();
         DB::beginTransaction();
         try {
-            $updated = $this->update($request);
+            $updated = $this->update();
             DB::commit();
             return ResponseService::json($words, Response::HTTP_OK, $updated);
         } catch (\Throwable $th) {
@@ -115,12 +117,28 @@ trait RepositoryTrait
         }
     }
 
-    public function executeDestroy($request)
+
+    public function executeReplace()
+    {
+        $words = 'Replace ' . $this->getModuleName();
+        DB::beginTransaction();
+        try {
+            $updated = $this->replace();
+            DB::commit();
+            return ResponseService::json($words, Response::HTTP_OK, $updated);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+            return ResponseService::json($words, Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    public function executeDestroy()
     {
         $words = 'Delete ' . $this->getModuleName();
         DB::beginTransaction();
         try {
-            $this->destroy($request);
+            $this->destroy();
             DB::commit();
             return ResponseService::json($words, Response::HTTP_OK);
         } catch (\Throwable $th) {
@@ -131,14 +149,22 @@ trait RepositoryTrait
 
     public static function make($request)
     {
-        $request['created_by']  = $request->get('created_by') ?? config('user')->id;
-        $request['updated_by']  = $request->get('updated_by') ?? config('user')->id;
+        if (!is_array($request)) {
+            $request = $request->validated();
+        }
+        $default_user  = config('user')->id ?? 1;
+        $request['created_by']  = $request['created_by'] ?? $default_user;
+        $request['updated_by']  = $request['updated_by'] ?? $default_user;
         return (new static)->actionSetter('store', $request);
     }
 
     public function fill($request)
     {
-        $request['updated_by']  = $request->get('updated_by') ?? config('user')->id;
+        if (!is_array($request)) {
+            $request = $request->validated();
+        }
+        $default_user  = config('user')->id ?? 1;
+        $request['updated_by']  = $request['updated_by'] ?? $default_user;
         return $this->actionSetter('update', $request);
     }
 
@@ -152,12 +178,27 @@ trait RepositoryTrait
     public function save()
     {
         $execute = 'execute' . ucwords($this->action);
-        return $this->$execute($this->request);
+        return $this->$execute();
     }
 
     public function delete()
     {
         $execute = 'execute' . ucwords('destroy');
         return $this->$execute($this->request);
+    }
+
+    public function replace()
+    {
+        $request = $this->request;
+        $moduleName = $this->getModuleName();
+        $bridging = $request['bridging'] ?? [];
+        $data = Bridging::$moduleName()
+            ->where('vendor_primary_id', $bridging['vendor_primary_id'])
+            ->first();
+        if ($data) {
+            $this->model = $this->model->find($data->id);
+            return $this->update();
+        }
+        return $this->store();
     }
 }
