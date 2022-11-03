@@ -87,12 +87,12 @@ trait RepositoryTrait
         return $words;
     }
 
-    public function executeStore($request)
+    public function executeStore()
     {
         $words = $this->getModuleName();
         DB::beginTransaction();
         try {
-            $stored = $this->store($request);
+            $stored = $this->store();
             DB::commit();
             return ResponseService::json($words, Response::HTTP_CREATED, $stored);
         } catch (\Throwable $th) {
@@ -197,8 +197,8 @@ trait RepositoryTrait
             ->first();
         if ($data) {
             $this->model = $this->model->find($data->id);
-            return $this->update();
+            return $this->executeUpdate();
         }
-        return $this->store();
+        return $this->executeStore();
     }
 }
