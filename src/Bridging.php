@@ -21,4 +21,8 @@ class Bridging extends Model
     {
         return $query->where('model', Company::class);
     }
+    public function scopeBranch($query)
+    {
+        return $query->where('model', Branch::class);
+    }
 }
