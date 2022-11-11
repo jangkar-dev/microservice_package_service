@@ -10,7 +10,7 @@ class FilterService
 {
     public $request;
 
-    public function __construct(Request $request)
+    public function __construct($request)
     {
         /* Getting the id of the user that is logged in. */
         $this->id_user = 1;
@@ -38,7 +38,7 @@ class FilterService
         $request = $this->request;
         /* Checking if the request has a payload, if it does, it returns the payload, if not, it returns
        an empty array. */
-        $arrays = $request->get($payload) ?? [];
+        $arrays = $request[$payload] ?? [];
         /* Checking if the payload is empty, if it is, it returns an empty array, if not, it returns
         the payload. */
         $arrays = $arrays == '' || $arrays == null ? [] : $arrays;
@@ -51,7 +51,7 @@ class FilterService
         $request = $this->request;
         /* Checking if the request has a keyword, if it does, it returns the keyword, if not, it
         returns an empty string. */
-        $keyword = $request->get('keyword') ?? '';
+        $keyword = $request['keyword'] ?? '';
         return (string)$keyword;
     }
 
