@@ -35,8 +35,8 @@ trait RepositoryTrait
 
     public static function request($request)
     {
-        $request = is_array($request) ? new Request($request) : $request;
-        $per_page = $request->get('per_page') ?? null;
+        $request = is_array($request) ? $request : $request->all();
+        $per_page = $request['per_page'] ?? null;
         $request = self::rule($request);
         return (new static)->setRequest($request, $per_page);
     }
