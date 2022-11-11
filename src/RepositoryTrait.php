@@ -187,7 +187,7 @@ trait RepositoryTrait
         return $this->$execute($this->request);
     }
 
-    public function replace()
+    public function bridging()
     {
         $request = $this->request;
         $moduleName = $this->getModuleName();
@@ -199,6 +199,17 @@ trait RepositoryTrait
             $this->model = $this->model->find($data->id);
             return $this->executeUpdate();
         }
-        return $this->executeStore();
+        $this->executeStore();
+        $bridging = $request['bridging'] ?? [];
+        return $this->model->when(!empty($bridging), function () use ($bridging, $moduleName) {
+            return $this->model->hasOne(Bridging::class, 'id')->save(
+                new Bridging([
+                    'id' => $this->model->id,
+                    'model' => 'App\Models\\' . $moduleName,
+                    'vendor_id' => $bridging['vendor_id'],
+                    'vendor_primary_id' => $bridging['vendor_primary_id'],
+                ])
+            );
+        });
     }
 }
