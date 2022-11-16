@@ -54,6 +54,18 @@ trait TestTrait
         return Branch::whereIn("id", $branch_ids)->get()->pluck("company_id")->toArray();
     }
     /**
+     * It takes an array of company ids and returns an array of branch ids
+     * 
+     * @param company_ids The company ids to get the branches from.
+     * 
+     * @return An array of branch ids.
+     */
+    public function branchFromCompany($company_ids)
+    {
+        $company_ids = (array) $company_ids;
+        return Branch::whereIn("company_id", $company_ids)->get()->pluck("id")->toArray();
+    }
+    /**
      * It returns an array of 3 random branch ids
      *
      * @return An array of 3 random branch ids.
@@ -61,6 +73,15 @@ trait TestTrait
     public function randomMultipleBranch()
     {
         return Branch::inRandomOrder()->limit(3)->get()->pluck("id")->toArray();
+    }
+    /**
+     * It returns an array of 3 random branch ids
+     *
+     * @return An array of 3 random branch ids.
+     */
+    public function randomMultipleCompany()
+    {
+        return Company::inRandomOrder()->limit(3)->get()->pluck("id")->toArray();
     }
     /**
      * > It takes a response object and returns the data from the response
