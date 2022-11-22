@@ -190,9 +190,9 @@ trait RepositoryTrait
     public function bridging()
     {
         $request = $this->request;
-        $moduleName = $this->getModuleName();
         $bridging = $request['bridging'] ?? [];
-        $data = Bridging::$moduleName()
+        $moduleName = $this->getModuleName();
+        $data = Bridging::where('model', 'App\Models\\' . $moduleName)
             ->where('vendor_primary_id', $bridging['vendor_primary_id'])
             ->first();
         if ($data) {
