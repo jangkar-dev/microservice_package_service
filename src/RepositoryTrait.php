@@ -5,29 +5,34 @@ namespace App\Traits;
 use App\Http\Requests\FormRequest;
 use App\Models\Bridging;
 use App\Services\ResponseService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Http\FormRequest as HttpFormRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 trait RepositoryTrait
 {
-    public $action = '';
-    public $request = [];
+    protected $action = '';
+    protected $request = [];
+    protected $without = [];
 
-    public static function query()
+    public static function query(): self
     {
         $class = __CLASS__;
         return new $class();
     }
 
-    public static function model(Model $model)
+    public static function model($model = null): self
     {
         return (new static)->setModel($model);
     }
 
-    public function compact($request)
+    public function compact($request): self
     {
         $this->request = $request;
         return $this;
@@ -45,41 +50,47 @@ trait RepositoryTrait
     {
         $this->model->per_page_request = $per_page;
         $this->request = $request;
-        return $this->execute();
+        return $this->executeIndex();
     }
 
-    public function setModel($model)
+    public function setModel($model): self
     {
-        $this->model = $model;
+        if ($model !== null) {
+            if (is_numeric($model)) {
+                $this->model = $this->model->find($model);
+            } else {
+                $this->model = $model;
+            }
+        }
         return $this;
     }
 
-    public function getRequest()
+    public function getRequest(): array
     {
         return $this->request;
     }
 
-    public function execute()
+    public function executeIndex(): collection | Model | Builder
     {
         return $this->index();
     }
 
-    public function collection()
+    public function collection(): collection | Model | Builder
     {
         return $this->model;
     }
 
-    public function get()
+    public function get(): collection
     {
         return $this->request([])->get();
     }
 
-    public function find($payload)
+    public function find($payload): Collection | Model
     {
         return $this->request([])->find($payload);
     }
 
-    public function getModuleName()
+    public function getModuleName(): String
     {
         $string = (new \ReflectionClass($this))->getShortName();
         $words = preg_replace('/(?<!\ )[A-Z]/', '$0', $string);
@@ -87,11 +98,12 @@ trait RepositoryTrait
         return $words;
     }
 
-    public function executeStore()
+    public function executeStore(): JsonResponse
     {
         $words = $this->getModuleName();
         DB::beginTransaction();
         try {
+            $this->storeRule();
             $stored = $this->store();
             DB::commit();
             return ResponseService::json($words, Response::HTTP_CREATED, $stored);
@@ -102,11 +114,16 @@ trait RepositoryTrait
         }
     }
 
-    public function executeUpdate()
+    public function storeRule(): void
+    {
+    }
+
+    public function executeUpdate(): JsonResponse
     {
         $words = 'Update ' . $this->getModuleName();
         DB::beginTransaction();
         try {
+            $this->updateRule();
             $updated = $this->update();
             DB::commit();
             return ResponseService::json($words, Response::HTTP_OK, $updated);
@@ -117,8 +134,11 @@ trait RepositoryTrait
         }
     }
 
+    public function updateRule(): void
+    {
+    }
 
-    public function executeReplace()
+    public function executeReplace(): JsonResponse
     {
         $words = 'Replace ' . $this->getModuleName();
         DB::beginTransaction();
@@ -133,7 +153,7 @@ trait RepositoryTrait
         }
     }
 
-    public function executeDestroy()
+    public function executeDestroy(): JsonResponse
     {
         $words = 'Delete ' . $this->getModuleName();
         DB::beginTransaction();
@@ -147,7 +167,13 @@ trait RepositoryTrait
         }
     }
 
-    public static function make($request)
+    /**
+     * > This function creates a new instance of the model and sets the `created_by` and `updated_by`
+     * fields to the user id of the user who created the record
+     * @param \Illuminate\Http\Request|array|\Illuminate\Foundation\Http\FormRequest $request
+     * @return self A new instance of the class with the action set to store and the request set to the request
+     */
+    public static function make(Request | array | HttpFormRequest | Collection $request): self
     {
         if (!is_array($request)) {
             $request = $request->validated();
@@ -158,7 +184,21 @@ trait RepositoryTrait
         return (new static)->actionSetter('store', $request);
     }
 
-    public function fill($request)
+    /**
+     * > This function creates a new instance of the model and sets the `created_by` and `updated_by`
+     * fields to the user id of the user who created the record
+     * @param \Illuminate\Http\Request|array|\Illuminate\Foundation\Http\FormRequest $request
+     * @return self A new instance of the class with the action set to store and the request set to the request
+     */
+    public static function batch(Request | array | HttpFormRequest | Collection $request): self
+    {
+        if (!is_array($request)) {
+            $request = $request->validated();
+        }
+        return (new static)->actionSetter('batch', $request);
+    }
+
+    public function fill(Request | array | HttpFormRequest | Collection  $request): self
     {
         if (!is_array($request)) {
             $request = $request->validated();
@@ -168,26 +208,32 @@ trait RepositoryTrait
         return $this->actionSetter('update', $request);
     }
 
-    public function actionSetter($payload, $request)
+    public function actionSetter(String $payload, Request | array | HttpFormRequest | Collection  $request)
     {
         $this->request = $request;
         $this->action = $payload;
         return $this;
     }
 
-    public function save()
+    public function save(): JsonResponse
     {
         $execute = 'execute' . ucwords($this->action);
         return $this->$execute();
     }
 
-    public function delete()
+    public function delete(): JsonResponse
     {
         $execute = 'execute' . ucwords('destroy');
         return $this->$execute($this->request);
     }
 
-    public function bridging()
+    public function without(array $without = []): self
+    {
+        $this->without = $without;
+        return $this;
+    }
+
+    public function bridging(): Model | Collection
     {
         $request = $this->request;
         $bridging = $request['bridging'] ?? [];
