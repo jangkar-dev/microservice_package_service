@@ -243,7 +243,8 @@ trait RepositoryTrait
             ->first();
         if ($data) {
             $this->model = $this->model->find($data->id);
-            return $this->executeUpdate();
+            $this->executeUpdate();
+            return $this->model;
         }
         $this->executeStore();
         $bridging = $request['bridging'] ?? [];
