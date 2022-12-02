@@ -15,7 +15,8 @@ class Service
         $TYPE = strtoupper($type);
         $API = env($TYPE.'_SERVICE_URL');
         $TOKEN = env($TYPE.'_SERVICE_TOKEN');
-        if (explode('.', $API)[0] == '127') {
+        $FIRST_URL = explode('.', $API)[0];
+        if ($FIRST_URL == '127' || $FIRST_URL == '103') {
             $SSL = "http://";
         }
         $this->baseUrl = $SSL . $API;
