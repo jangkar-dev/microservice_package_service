@@ -28,7 +28,7 @@ class Service
             'Authenticated' => json_encode([
                 'user' => config('user'),
             ]),
-            'Microservice_Token' => $this->token
+            'Microservice-Token' => $this->token
         ]);
     }
     public function returnRequest($response)
