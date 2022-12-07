@@ -233,7 +233,7 @@ trait RepositoryTrait
         return $this;
     }
 
-   public function bridging(): Model | Collection
+    public function bridging(): Model | Collection
     {
         $request = $this->request;
         $bridging = $request['bridging'] ?? [];
@@ -248,6 +248,7 @@ trait RepositoryTrait
         }
         DB::beginTransaction();
         try {
+            $this->storeRule();
             $this->store();
             $bridging = $request['bridging'] ?? [];
             if (!empty($bridging)) {
