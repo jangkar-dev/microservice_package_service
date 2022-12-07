@@ -233,7 +233,7 @@ trait RepositoryTrait
         return $this;
     }
 
-    public function bridging(): Model | Collection
+   public function bridging(): Model | Collection
     {
         $request = $this->request;
         $bridging = $request['bridging'] ?? [];
@@ -246,17 +246,26 @@ trait RepositoryTrait
             $this->executeUpdate();
             return $this->model;
         }
-        $this->executeStore();
-        $bridging = $request['bridging'] ?? [];
-        return $this->model->when(!empty($bridging), function () use ($bridging, $moduleName) {
-            return $this->model->hasOne(Bridging::class, 'id')->save(
-                new Bridging([
-                    'id' => $this->model->id,
-                    'model' => 'App\Models\\' . $moduleName,
-                    'vendor_id' => $bridging['vendor_id'],
-                    'vendor_primary_id' => $bridging['vendor_primary_id'],
-                ])
-            );
-        });
+        DB::beginTransaction();
+        try {
+            $this->store();
+            $bridging = $request['bridging'] ?? [];
+            if (!empty($bridging)) {
+                $this->model->hasOne(Bridging::class, 'id')->save(
+                    new Bridging([
+                        'id' => $this->model->id,
+                        'model' => 'App\Models\\' . $moduleName,
+                        'vendor_id' => $bridging['vendor_id'],
+                        'vendor_primary_id' => $bridging['vendor_primary_id'],
+                    ])
+                );
+            }
+            DB::commit();
+            return $this->model;
+        } catch (\Throwable $th) {
+            report($th);
+            DB::rollBack();
+            return $this->model;
+        }
     }
 }
