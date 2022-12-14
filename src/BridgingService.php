@@ -2,26 +2,25 @@
 
 namespace App\Services;
 
-use Carbon\Carbon;
+use App\Models\Bridging;
+use Illuminate\Database\Query\Builder;https://github.com/jangkar-dev/microservice_package_service/blob/main/src/BridgingService.php
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Helper;
 
 class BridgingService
 {
-    private int $bridgingStarted = 0;
     /**
      * get id from db shared with provided table model
      */
-    public static function getBridgingId(string $model, Collection | array | int $id): Collection
+    public static function getBridgingId(string $model, Collection | array | int $id): Collection | Builder
     {
-        $id = Helper::isCollection($id) ? $id->toArray() : $id;
+        $id = $id instanceof Collection ? $id->toArray() : $id;
         return  DB::connection('shared')->table('bridgings')
             ->select('id', 'vendor_primary_id')
             ->where('model',  $model)
-            ->when(is_array($id), function ($q) {
+            ->when(is_array($id), function ($q) use ($id) {
                 return $q->whereIn('vendor_primary_id', $id)->get()->pluck('id');
-            }, function ($q) {
+            }, function ($q) use ($id) {
                 return $q->where('vendor_primary_id', $id)->first()->id;
             });
     }
@@ -35,25 +34,5 @@ class BridgingService
         ->where('model', $model)
             ->get()
             ->pluck('id');
-    }
-
-    /* Updating the bridging_histories table with the current time. */
-    public function close(int $bridgingStarted = null): self
-    {
-        $bridgingStarted = $bridgingStarted ?? $this->bridgingStarted;
-        DB::connection('shared')
-            ->table('bridging_histories')
-            ->where('id', $bridgingStarted)
-            ->update([ 'finished_at' => Carbon::now()]);
-        return $this;
-    }
-    
-    public function start(): self
-    {
-        $bridgingStarted = DB::connection('shared')
-            ->table('bridging_histories')
-            ->insertGetId(['model' => Brand::class]);
-        $this->bridgingStarted = $bridgingStarted;
-        return $this;
     }
 }
