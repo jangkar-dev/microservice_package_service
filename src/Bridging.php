@@ -17,12 +17,4 @@ class Bridging extends Model
         'vendor_id',
         'vendor_primary_id',
     ];
-    public function scopeCompany($query)
-    {
-        return $query->where('model', Company::class);
-    }
-    public function scopeBranch($query)
-    {
-        return $query->where('model', Branch::class);
-    }
 }

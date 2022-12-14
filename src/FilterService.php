@@ -46,6 +46,11 @@ class FilterService
         return (array)$arrays;
     }
 
+    public function collection($payload, $convert = false)
+    {
+        return collect($this->array($payload, $convert));
+    }
+
     public function keyword()
     {
         $request = $this->request;

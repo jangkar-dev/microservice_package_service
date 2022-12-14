@@ -8,80 +8,144 @@ trait BuilderTrait
 {
     private $cleaner = [];
     private $joinedTable = [];
-    public function scopeJoinWith($query, $joiners, $except = [])
+
+    /**
+     * It joins the tables based on the given joiners and returns the query
+     * 
+     * @param query The query builder object
+     * @param array joiners An array of strings that will be used to join the tables.
+     * @param array except This is an array of tables that you don't want to join.
+     * 
+     * @return The query builder object.
+     */
+    public function scopeJoinWith($query, array $joiners, array $except = [])
     {
+        // Select the base table
         $query->selectBaseTable();
+        // Loop through the given joiners
         foreach ($joiners as $joiner) {
+            // Split the joiner by '.' to get the base table and the joiner
             $splits = explode('.', $joiner);
+            // Count the number of splits
             $counted = count($splits);
+            // Loop through the splits
             for ($i = 0; $i < $counted; $i++) {
+                // Initialize variables
                 $base = '';
                 $joiner = '';
+
                 if ((isset($splits[$i + 1]) && $i > 0) || ($i + 1 == $counted && $counted > 1)) {
+                    // Set the base and joiner
                     $base = $splits[$i - 1];
                     $joiner = $splits[$i];
                 } else {
+                    // Set the joiner only
                     $joiner = $splits[$i];
                 }
+
+                // Remove underscores and capitalize the joiner
                 $connector = 'join' . str_replace("_", "", ucwords($joiner, " /_"));
+
                 if ($base != '') {
+                    // Get the table name for the base
                     $Table = 'App\Models\\' . ucwords($base);
                     $base = $Table::getTableName();
                 }
+
+                // Check if the base is empty
                 $validator = $base == '' ? $connector : $connector . '(' . $base . ')';
+
+                // Check if the validator is not in the cleaner array
                 if (!in_array($validator, $this->cleaner) || $this->cleaner == []) {
+                    // Join the tables
                     $query = $base == '' ? $query->$connector() : $query->$connector($base);
+
+                    // Add the validator to the cleaner array
                     $this->cleaner[] = $validator;
+
+                    // Add the joiner to the joined table array
                     $this->joinedTable[] = $joiner;
                 }
             }
+
         }
         return $query->selectWith();
-        return [
-            $this->cleaner,
-            $this->joinedTable
-        ];
+        // return [
+        //     $this->cleaner,
+        //     $this->joinedTable
+        // ];
     }
 
+    /**
+     * It takes the fillable columns of the current class and 
+     * adds the plural form of the table name as a prefix to each column
+     */
     public function scopeSelectBaseTable($query)
     {
-        $Table = __CLASS__;
-        $fillable =  $Table::getTableFillable();
-        $plural = $Table::getTableName();
-        foreach ($fillable as $key => $row) {
-            $fillable[$key] = $plural . '.' . $row;
+        // Get the name of the current class and its fillable columns
+        $table = __CLASS__;
+        $fillableColumns = $table::getTableFillable();
+
+        // Get the plural form of the table name
+        $tableNamePlural = $table::getTableName();
+
+        // Create an array to store the selected columns
+        $selectedColumns = [];
+
+        // Add each fillable column to the selected columns array,
+        // using the plural table name as a prefix
+        foreach ($fillableColumns as $column) {
+            $selectedColumns[] = "$tableNamePlural.$column";
         }
-        return $query->select($fillable);
+
+        // Return the query with the selected columns
+        return $query->select($selectedColumns);
     }
 
     public function toCamelCase($table)
     {
         $table = Str::singular($table);
-        $table = lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $table))));
+        $table = Str::camel($table);
         return $table;
     }
-
-    public function scopeSelectWith($query, $except = [])
+    public function scopeSelectWith($query, array $except = [])
     {
         $response = [];
-        foreach ($this->joinedTable as $key => $table) {
+
+        // Loop through the joined table array
+        foreach ($this->joinedTable as $table) {
+            // Convert the table name to camel case
             $table = $this->toCamelCase($table);
+
+            // Get the table model class
             $Table = 'App\Models\\' . $table;
+
+            // Get the fillable fields of the table
             $fillable =  $Table::getTableFillable();
+
+            // Get the plural and singular names of the table
             $plural = $Table::getTableName();
             $singular = Str::singular($plural);
+
+            // Check if the singular or plural name is in the except array
             if (in_array($singular, $except) || in_array($plural, $except)) {
                 continue;
             }
+
+            // Append the table name to the fillable fields
             foreach ($fillable as $key => $row) {
                 $fillable[$key] = $plural . '.' . $row . ' as ' . $singular . '.' . $row;
             }
+
+            // Merge the fillable fields with the response array
             $response = array_merge($response, $fillable);
         }
+
+        // Add the fillable fields to the query and return it
         return $query->addSelect($response);
     }
 
-    public function scopeSelectAttribute($query, $relation, $attributes = [])
+    public function scopeSelectAttribute($query, array $relation, array $attributes = [])
     {
         if (empty($attributes)) {
             $table = $relation;

@@ -20,40 +20,38 @@ class AuthService
     public function handle(Request $request, Closure $next)
     {
         $requestHost = $request->header('host');
-        $authenticated = $request->header('Authenticated');
-        $fetchParsed = json_decode($authenticated);
+        $authenticated = json_decode($request->header('Authenticated'), true);
         $token = $request->header('microservice-token') ?? null;
-        $requestInfo = [
+
+        // Log request information for debugging purposes
+        Log::debug([
             'host' => $requestHost,
             'ip' => $request->getClientIp(),
             'url' => $request->getRequestUri(),
             'agent' => $request->header('User-Agent'),
-        ];
-        Log::debug($requestInfo);
-        Log::debug('Try to Access Service'.env('ALLOWED_DOMAINS'));
+        ]);
+
+        // Check if the host is allowed to access the service
         $allowedHosts = explode(',', env('ALLOWED_DOMAINS'));
-        if (isset($fetchParsed->user)) {
-        } else {
+        if (!in_array($requestHost, $allowedHosts, false)) {
             return response()->json('This host is not allowed', Response::HTTP_UNAUTHORIZED);
         }
-        if (!app()->runningUnitTests()) {
-            if (env('APP_ENV') == 'Production') {
-                if (
-                    !in_array($requestHost, $allowedHosts, false)
-                    || $authenticated == ''
-                    || $authenticated == null
-                    || $fetchParsed->user == null
-                    || $fetchParsed->user == ''
-                    || $fetchParsed->user->id == null
-                    || $fetchParsed->user->id == ''
-                    || $token != env('APP_SERVICE_TOKEN')
-                ) {
-                    return response()->json('This host is not allowed', Response::HTTP_UNAUTHORIZED);
-                }
-            }
+
+        // Check if the request is authenticated and the token is valid
+        if (app()->runningUnitTests() || env('APP_ENV') != 'Production') {
+            return $next($request);
         }
+
+        if (empty($authenticated) || empty($authenticated['user']) || $token != env('APP_SERVICE_TOKEN')) {
+            return response()->json('This host is not allowed', Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Set the authenticated user in the config
+        Config::set('user', $authenticated['user']);
+
+        // Access to the service is granted
         Log::debug('Access Service Accepted');
-        Config::set('user', $fetchParsed->user);
+
         return $next($request);
     }
 }

@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response;
 
 trait RepositoryTrait
@@ -38,12 +39,30 @@ trait RepositoryTrait
         return $this;
     }
 
+    // This function receives a request and sets the pagination limit based on the "per_page" parameter.
+    // It also applies a set of rules to the request and returns a new instance of the current class
+    // with the modified request and pagination limit.
     public static function request($request)
     {
-        $request = is_array($request) ? $request : $request->all();
-        $per_page = $request['per_page'] ?? null;
-        $request = self::rule($request);
-        return (new static)->setRequest($request, $per_page);
+        // If the request is a Collection, extract the data from the collection.
+        // Otherwise, assume it is an array and use it as-is.
+        // If the request is neither a Collection nor an array, throw an error.
+        if ($request instanceof Collection) {
+            $requestData = $request->all();
+        } elseif (is_array($request)) {
+            $requestData = $request;
+        } else {
+            throw new InvalidArgumentException('Invalid request data. Expected a Collection or an array.');
+        }
+
+        // Get the pagination limit from the request data, or use a default value of null.
+        $perPage = $requestData['per_page'] ?? null;
+
+        // Apply the rules to the request data and get the filtered request.
+        $filteredRequest = self::rule($requestData);
+
+        // Return a new instance of the current class with the modified request and pagination limit.
+        return (new static)->setRequest($filteredRequest, $perPage);
     }
 
     public function setRequest($request, $per_page = null)
@@ -80,9 +99,9 @@ trait RepositoryTrait
         return $this->model;
     }
 
-    public function get(): collection
+    public static function get(): collection
     {
-        return $this->request([])->get();
+        return self::request([])->get();
     }
 
     public function find($payload): Collection | Model
@@ -92,60 +111,32 @@ trait RepositoryTrait
 
     public function getModuleName(): String
     {
-        $string = (new \ReflectionClass($this))->getShortName();
-        $words = preg_replace('/(?<!\ )[A-Z]/', '$0', $string);
+        // This function gets the short name of the current class (without the "Repository" part)
+        // and adds a space before each uppercase letter to make it more readable.
+        // For example, the class "MyModuleRepository" would become "My Module".
+        $reflection = new \ReflectionClass($this);
+        $shortName = $reflection->getShortName();
+        $words = preg_replace('/(?<!\ )[A-Z]/', '$0', $shortName);
         $words = str_replace("Repository", "", $words);
         return $words;
-    }
-
-    public function executeStore(): JsonResponse
-    {
-        $words = $this->getModuleName();
-        DB::beginTransaction();
-        try {
-            $this->storeRule();
-            $stored = $this->store();
-            DB::commit();
-            return ResponseService::json($words, Response::HTTP_CREATED, $stored);
-        } catch (\Throwable $th) {
-            report($th);
-            DB::rollBack();
-            return ResponseService::json($words, Response::HTTP_BAD_REQUEST);
-        }
     }
 
     public function storeRule(): void
     {
     }
 
-    public function executeUpdate(): JsonResponse
-    {
-        $words = 'Update ' . $this->getModuleName();
-        DB::beginTransaction();
-        try {
-            $this->updateRule();
-            $updated = $this->update();
-            DB::commit();
-            return ResponseService::json($words, Response::HTTP_OK, $updated);
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            report($th);
-            return ResponseService::json($words, Response::HTTP_BAD_REQUEST);
-        }
-    }
-
     public function updateRule(): void
     {
     }
 
-    public function executeReplace(): JsonResponse
+    public function execute(callable $callback): JsonResponse
     {
-        $words = 'Replace ' . $this->getModuleName();
+        $words = 'Some operation on ' . $this->getModuleName();
         DB::beginTransaction();
         try {
-            $updated = $this->replace();
+            $result = $callback();
             DB::commit();
-            return ResponseService::json($words, Response::HTTP_OK, $updated);
+            return ResponseService::json($words, Response::HTTP_OK, $result);
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
@@ -153,18 +144,46 @@ trait RepositoryTrait
         }
     }
 
+    public function executeStore(): JsonResponse
+    {
+        return $this->execute(function () {
+            $this->storeRule();
+            return $this->store();
+        });
+    }
+
+    public function executeUpdate(): JsonResponse
+    {
+        return $this->execute(function () {
+            $this->updateRule();
+            return $this->update();
+        });
+    }
+
+    public function executeReplace(): JsonResponse
+    {
+        return $this->execute(function () {
+            return $this->replace();
+        });
+    }
+
     public function executeDestroy(): JsonResponse
     {
-        $words = 'Delete ' . $this->getModuleName();
-        DB::beginTransaction();
-        try {
+        return $this->execute(function () {
             $this->destroy();
-            DB::commit();
-            return ResponseService::json($words, Response::HTTP_OK);
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return ResponseService::json($words, Response::HTTP_BAD_REQUEST);
-        }
+        });
+    }
+
+    public function save(): JsonResponse
+    {
+        $execute = 'execute' . ucwords($this->action);
+        return $this->$execute();
+    }
+
+    public function delete(): JsonResponse
+    {
+        $execute = 'execute' . ucwords('destroy');
+        return $this->$execute($this->request);
     }
 
     /**
@@ -215,42 +234,39 @@ trait RepositoryTrait
         return $this;
     }
 
-    public function save(): JsonResponse
-    {
-        $execute = 'execute' . ucwords($this->action);
-        return $this->$execute();
-    }
-
-    public function delete(): JsonResponse
-    {
-        $execute = 'execute' . ucwords('destroy');
-        return $this->$execute($this->request);
-    }
-
     public function without(array $without = []): self
     {
         $this->without = $without;
         return $this;
     }
 
-    public function bridging(): Model | Collection
+    public function bridging(): Model|Collection
     {
         $request = $this->request;
         $bridging = $request['bridging'] ?? [];
         $moduleName = $this->getModuleName();
+
+        // Check if the bridging data already exists
         $data = Bridging::where('model', 'App\Models\\' . $moduleName)
             ->where('vendor_primary_id', $bridging['vendor_primary_id'])
             ->first();
+
+        // If the data exists, update it and return the updated model
         if ($data) {
             $this->model = $this->model->find($data->id);
             $this->executeUpdate();
             return $this->model;
         }
+
+        // If the data does not exist, start a database transaction
         DB::beginTransaction();
+
         try {
+            // Store the rule and model
             $this->storeRule();
             $this->store();
-            $bridging = $request['bridging'] ?? [];
+
+            // If bridging data is provided, save it
             if (!empty($bridging)) {
                 $this->model->hasOne(Bridging::class, 'id')->save(
                     new Bridging([
@@ -261,9 +277,12 @@ trait RepositoryTrait
                     ])
                 );
             }
+
+            // If everything goes well, commit the transaction and return the model
             DB::commit();
             return $this->model;
         } catch (\Throwable $th) {
+            // If an error occurs, roll back the transaction and return the model
             report($th);
             DB::rollBack();
             return $this->model;
