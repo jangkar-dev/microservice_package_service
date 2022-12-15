@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Bridging;
-use Illuminate\Database\Query\Builder;https://github.com/jangkar-dev/microservice_package_service/blob/main/src/BridgingService.php
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
