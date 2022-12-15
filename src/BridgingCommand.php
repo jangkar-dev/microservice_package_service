@@ -43,18 +43,20 @@ class BridgingCommand extends Command
 
     public function clearBridged(array $truncatedTables, array $models)
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        foreach ($truncatedTables as $truncatedTable) {
-            DB::table($truncatedTable)->truncate();
-        }
-        $truncatedSharers = [
-            'bridgings',
-            'bridging_histories',
-        ];
-        foreach ($truncatedSharers as $truncatedShare) {
-            DB::connection('shared')->table($truncatedShare)->whereIn('model', $models)->delete();
-        }
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        if(env('APP_ENV') != 'Production'){
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            foreach ($truncatedTables as $truncatedTable) {
+                DB::table($truncatedTable)->truncate();
+            }
+            $truncatedSharers = [
+                'bridgings',
+                'bridging_histories',
+            ];
+            foreach ($truncatedSharers as $truncatedShare) {
+                DB::connection('shared')->table($truncatedShare)->whereIn('model', $models)->delete();
+            }
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+       }
     }
     /**
      * Execute the console command.
