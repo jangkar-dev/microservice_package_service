@@ -42,21 +42,25 @@ trait RepositoryTrait
     // This function receives a request and sets the pagination limit based on the "per_page" parameter.
     // It also applies a set of rules to the request and returns a new instance of the current class
     // with the modified request and pagination limit.
-    public static function request($request)
+    public static function request(Collection | array | HttpFormRequest | Request $request)
     {
         // If the request is a Collection, extract the data from the collection.
         // Otherwise, assume it is an array and use it as-is.
         // If the request is neither a Collection nor an array, throw an error.
         if ($request instanceof Collection) {
             $requestData = $request->all();
+        } elseif ($request instanceof HttpFormRequest) {
+            $requestData = $request->validated();
+        } elseif ($request instanceof Request) {
+            $requestData = $request->all();
         } elseif (is_array($request)) {
             $requestData = $request;
         } else {
-            throw new InvalidArgumentException('Invalid request data. Expected a Collection or an array.');
+            throw new InvalidArgumentException('Invalid request data. Expected a Collection or an array or HttpFormRequest or Request.');
         }
 
         // Get the pagination limit from the request data, or use a default value of null.
-        $perPage = $requestData['per_page'] ?? null;
+        $perPage = $requestData['per_page'] ?? $request->per_page ?? null;
 
         // Apply the rules to the request data and get the filtered request.
         $filteredRequest = self::rule($requestData);
@@ -129,14 +133,16 @@ trait RepositoryTrait
     {
     }
 
-    public function execute(callable $callback): JsonResponse
+    public function execute(callable $callback, string $action = ''): JsonResponse
     {
         $words = 'Some operation on ' . $this->getModuleName();
+        Log::debug($action);
         DB::beginTransaction();
+        $response = $action == 'executeStore' ? Response::HTTP_CREATED : Response::HTTP_OK;
         try {
             $result = $callback();
             DB::commit();
-            return ResponseService::json($words, Response::HTTP_OK, $result);
+            return ResponseService::json($words, $response, $result);
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
@@ -149,7 +155,7 @@ trait RepositoryTrait
         return $this->execute(function () {
             $this->storeRule();
             return $this->store();
-        });
+        }, __FUNCTION__);
     }
 
     public function executeUpdate(): JsonResponse
