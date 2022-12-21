@@ -133,12 +133,12 @@ trait RepositoryTrait
     {
     }
 
-    public function execute(callable $callback, string $action = ''): JsonResponse
+    public function execute(callable $callback, string $action = null): JsonResponse
     {
         $words = 'Some operation on ' . $this->getModuleName();
         Log::debug($action);
         DB::beginTransaction();
-        $response = $action == 'executeStore' ? Response::HTTP_CREATED : Response::HTTP_OK;
+        $response = $action ?? Response::HTTP_OK;
         try {
             $result = $callback();
             DB::commit();
@@ -155,7 +155,7 @@ trait RepositoryTrait
         return $this->execute(function () {
             $this->storeRule();
             return $this->store();
-        }, __FUNCTION__);
+        }, 201);
     }
 
     public function executeUpdate(): JsonResponse
