@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthService
@@ -38,17 +39,18 @@ class AuthService
         }
 
         // Check if the request is authenticated and the token is valid
-        if (app()->runningUnitTests() || env('APP_ENV') != 'Production') {
-            return $next($request);
-        }
+        // if (app()->runningUnitTests() || env('APP_ENV') != 'Production') {
+        //     return $next($request);
+        // }
 
         if (empty($authenticated) || empty($authenticated['user']) || $token != env('APP_SERVICE_TOKEN')) {
             return response()->json('This host is not allowed', Response::HTTP_UNAUTHORIZED);
         }
 
         // Set the authenticated user in the config
-        Config::set('user', $authenticated['user']);
-
+        // Config::set('user', $authenticated['user']);
+        Session::forget('user');
+        Session::put('user', (object)$authenticated['user']);
         // Access to the service is granted
         Log::debug('Access Service Accepted');
 
