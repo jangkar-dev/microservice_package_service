@@ -12,7 +12,7 @@ class BridgingService
     /**
      * get id from db shared with provided table model
      */
-    public static function getBridgingId(string $model, Collection | array | int $id): Collection | Builder
+    public static function getBridgingId(string $model, Collection | array | int $id): int | Collection | Builder
     {
         $id = $id instanceof Collection ? $id->toArray() : $id;
         return  DB::connection('shared')->table('bridgings')
@@ -21,7 +21,11 @@ class BridgingService
             ->when(is_array($id), function ($q) use ($id) {
                 return $q->whereIn('vendor_primary_id', $id)->get()->pluck('id');
             }, function ($q) use ($id) {
-                return $q->where('vendor_primary_id', $id)->first()->id;
+                $finded = $q->where('vendor_primary_id', $id)->first();
+                if($finded){
+                    return $finded->id;
+                }
+                return 0;
             });
     }
 
