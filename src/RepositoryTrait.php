@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -85,6 +86,9 @@ trait RepositoryTrait
                 $this->model = $model;
             }
         }
+        else{
+            throw new InvalidArgumentException('Invalid model. Expected a int or model.');
+        }
         return $this;
     }
 
@@ -125,8 +129,9 @@ trait RepositoryTrait
         return $words;
     }
 
-    public function storeRule(): void
+    public function storeRule():self
     {
+        return $this;
     }
 
     public function updateRule(): void
@@ -136,7 +141,6 @@ trait RepositoryTrait
     public function execute(callable $callback, string $action = null): JsonResponse
     {
         $words = 'Some operation on ' . $this->getModuleName();
-        Log::debug($action);
         DB::beginTransaction();
         $response = $action ?? Response::HTTP_OK;
         try {
@@ -203,7 +207,7 @@ trait RepositoryTrait
         if (!is_array($request)) {
             $request = $request->validated();
         }
-        $default_user  = config('user')->id ?? 1;
+        $default_user  = Session::get('user')->id ?? 1;
         $request['created_by']  = $request['created_by'] ?? $default_user;
         $request['updated_by']  = $request['updated_by'] ?? $default_user;
         return (new static)->actionSetter('store', $request);
@@ -228,7 +232,7 @@ trait RepositoryTrait
         if (!is_array($request)) {
             $request = $request->validated();
         }
-        $default_user  = config('user')->id ?? 1;
+        $default_user  = Session::get('user')->id ?? 1;
         $request['updated_by']  = $request['updated_by'] ?? $default_user;
         return $this->actionSetter('update', $request);
     }
