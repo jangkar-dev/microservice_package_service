@@ -73,7 +73,7 @@ class BridgingCommand extends Command
             ->where('model', $this->model)
             ->where('created_at', '>', $yesterday)
             ->count();
-        if ($bridgingHistories > 5) {
+        if ($bridgingHistories > 55) {
             Log::debug('Bridging '.$this->model.' Has Try Five Times!!');
             Log::debug('Bridging '.$this->model.' Stopped!!');
             return;
