@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Console\Commands;
+
+use App\Services\BotService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -66,16 +68,24 @@ class BridgingCommand extends Command
     public function callBridging(callable $callback, callable $callbackChain = null)
     {
         $callbackChain();
-        Log::debug('Bridging '.$this->model.' Running!!');
+        $botService = new BotService('telegram');
+        $startMessage = 'Bridging ' . $this->model . ' Running!!';
+        $botService->sticker('CAACAgIAAxkBAAIDa2OuWOxAUOQg2tEZdTULcuedJ1eyAALLEAACg4ihSjNsJ7Kc3_mPLQQ')->send();
+        $botService->message($startMessage)->send();
+        Log::debug($startMessage);
         $yesterday = Carbon::yesterday();
         $bridgingHistories = DB::connection('shared')
             ->table('bridging_histories')
             ->where('model', $this->model)
             ->where('created_at', '>', $yesterday)
             ->count();
-        if ($bridgingHistories > 55) {
-            Log::debug('Bridging '.$this->model.' Has Try Five Times!!');
-            Log::debug('Bridging '.$this->model.' Stopped!!');
+        if ($bridgingHistories > 5) {
+            $limitMessage = 'Bridging ' . $this->model . ' Has Try Five Times!!';
+            $stopMessage = 'Bridging ' . $this->model . ' Stopped!!';
+            $botService->message($limitMessage)->send();
+            $botService->message($stopMessage)->send();
+            Log::debug($limitMessage);
+            Log::debug($stopMessage);
             return;
         };
         $this->start();
@@ -83,11 +93,16 @@ class BridgingCommand extends Command
             $callback();
         } catch (\Throwable $th) {
             report($th);
-            Log::debug('Bridging '.$this->model.' Retried!!');
+            $retryMessage = 'Bridging ' . $this->model . ' Retried!!';
+            $botService->message($retryMessage)->send();
+            $botService->message($th)->send();
+            Log::debug($retryMessage);
             $this->close();
         }
         $this->close();
         $this->output->progressFinish();
-        Log::debug('Bridging '.$this->model.' Finished!!');
+        $finishedMessage = 'Bridging '.$this->model.' Finished!!';
+        $botService->message($finishedMessage)->send();
+        Log::debug($finishedMessage);
     }
 }
