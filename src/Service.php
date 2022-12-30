@@ -33,11 +33,19 @@ class Service
     }
     public function returnRequest($response)
     {
-        return collect($response->object()->data);
+        $response = $response->object();
+        return collect($response->data ?? $response->message ?? []);
     }
+
     public function get($service, $request = [])
     {
         $response = $this->getRequest()->get($this->baseUrl . '/' . $service, $request);
+        return $this->returnRequest($response);
+    }
+
+    public function post($service, $request = [])
+    {
+        $response = $this->getRequest()->post($this->baseUrl . '/' . $service, $request);
         return $this->returnRequest($response);
     }
 }
