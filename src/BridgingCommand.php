@@ -70,7 +70,15 @@ class BridgingCommand extends Command
         $callbackChain();
         $botService = new BotService('telegram');
         $startMessage = 'Bridging ' . $this->model . ' Running!!';
-        $botService->sticker('CAACAgIAAxkBAAIDa2OuWOxAUOQg2tEZdTULcuedJ1eyAALLEAACg4ihSjNsJ7Kc3_mPLQQ')->send();
+        $stickers = [
+            'CAACAgIAAxkBAAIEYmOum7LBrKhxd9zjfzvXbcV-gPJ3AAJMDwACIoAJSiN4DjzUWI6XLQQ',
+            'CAACAgIAAxkBAAIEZWOum-x2wb7RPxbPmfQI4hws1MQrAAI7DwACsxv4Sb6QzEsAARe-Yy0E',
+            'CAACAgIAAxkBAAIEaGOunAjDu6oWDRavx5iXw5bvgLKvAAJFGAACFKjwSFXfm5tU_MUrLQQ',
+            'CAACAgIAAxkBAAIEa2OunCkr5L4SPfI8vbR2NdSIy8gAA9QRAAPAoEl5JwHijyv0DC0E',
+            'CAACAgIAAxkBAAIEbmOunEeewgWxxNAQlOmFKtt8mzTpAALeDAACq_jwSIOz2JiwcicqLQQ'
+        ];
+        $randomIndex = mt_rand(0, count($stickers) - 1);
+        $botService->sticker($stickers[$randomIndex])->send();
         $botService->message($startMessage)->send();
         Log::debug($startMessage);
         $yesterday = Carbon::yesterday();

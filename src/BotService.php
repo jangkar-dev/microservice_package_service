@@ -35,14 +35,16 @@ class BotService
 
     public function send()
     {
-        $to = $this->to;
-        $type = $this->type;
-        $body = $this->body;
-        $this->service->post('message', [
-            'to'   => $to,
-            'body' => $body,
-            'type' => $type
-        ]);
+        if (env('APP_ENV') == 'Production') {
+            $to = $this->to;
+            $type = $this->type;
+            $body = $this->body;
+            $this->service->post('message', [
+                'to'   => $to,
+                'body' => $body,
+                'type' => $type
+            ]);
+        }
         return $this;
     }
 }
