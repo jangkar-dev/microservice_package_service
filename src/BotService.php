@@ -10,7 +10,7 @@ class BotService
     protected $to = 'admin';
     public function __construct($type)
     {
-        $this->service = new Service($type.'_BOT');
+        $this->service = new Service($type . '_BOT');
     }
 
     public function to($user)
@@ -39,11 +39,15 @@ class BotService
             $to = $this->to;
             $type = $this->type;
             $body = $this->body;
-            $this->service->post('message', [
-                'to'   => $to,
-                'body' => $body,
-                'type' => $type
-            ]);
+            try {
+                $this->service->post('message', [
+                    'to'   => $to,
+                    'body' => $body,
+                    'type' => $type
+                ]);
+            } catch (\Throwable $th) {
+                // report($th);
+            }
         }
         return $this;
     }
