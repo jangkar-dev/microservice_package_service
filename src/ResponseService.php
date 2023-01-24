@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use Illuminate\Http\Resources\MissingValue;
+use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
 
 class ResponseService
 {
     static function userAuthority($user_id)
     {
-        if ($user_id != config('user')->id) {
+        if ($user_id != Session::get('user')->id) {
             return false;
         }
         return true;
