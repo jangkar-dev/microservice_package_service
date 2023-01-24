@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Http\Resources\AuthResource;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Session;
 
 class Service
 {
@@ -26,7 +27,7 @@ class Service
     {
         return Http::withHeaders([
             'Authenticated' => json_encode([
-                'user' => config('user'),
+                'user' => Session::get('user'),
             ]),
             'Microservice-Token' => $this->token
         ]);
