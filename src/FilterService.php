@@ -9,11 +9,12 @@ use Illuminate\Http\Request;
 class FilterService
 {
     public $request;
+    public $user_id;
 
     public function __construct($request)
     {
         /* Getting the id of the user that is logged in. */
-        $this->id_user = 1;
+        $this->user_id = 1;
         $this->request = $request;
     }
 
