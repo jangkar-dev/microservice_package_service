@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Traits;
+namespace Traits;
 
 use App\Http\Requests\FormRequest;
 use App\Models\Bridging;

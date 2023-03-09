@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Traits;
+namespace Traits;
 
 /* A trait that allows you to paginate your data. */
 

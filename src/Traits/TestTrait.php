@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Traits;
+namespace Traits;
 
 use App\Models\Branch;
 use App\Models\Company;
@@ -55,9 +55,9 @@ trait TestTrait
     }
     /**
      * It takes an array of company ids and returns an array of branch ids
-     * 
+     *
      * @param company_ids The company ids to get the branches from.
-     * 
+     *
      * @return An array of branch ids.
      */
     public function branchFromCompany($company_ids)

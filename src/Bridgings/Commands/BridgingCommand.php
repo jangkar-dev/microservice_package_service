@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace Bridgings\Commands;
 
 use App\Services\BotService;
 use Carbon\Carbon;

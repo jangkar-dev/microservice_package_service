@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Traits;
+namespace Traits;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Resources\MissingValue;

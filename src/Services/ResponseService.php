@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace Services;
 
 use Illuminate\Http\Resources\MissingValue;
 use Symfony\Component\HttpFoundation\Response;

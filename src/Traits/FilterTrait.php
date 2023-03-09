@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Traits;
+namespace Traits;
 
 use App\Services\FilterService;
 

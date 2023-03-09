@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace Services;
 
 use App\Http\Resources\AuthResource;
 use Illuminate\Support\Facades\Http;
 
-class Service
+class RequestService
 {
     protected $baseUrl;
     protected $token;

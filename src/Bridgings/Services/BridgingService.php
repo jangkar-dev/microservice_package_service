@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace Bridgings\Services;
 
 use App\Models\Bridging;
 use Illuminate\Database\Query\Builder;

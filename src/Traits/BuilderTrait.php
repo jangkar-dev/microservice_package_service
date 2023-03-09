@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Traits;
+namespace Traits;
 
 use Illuminate\Support\Str;
 
@@ -11,11 +11,11 @@ trait BuilderTrait
 
     /**
      * It joins the tables based on the given joiners and returns the query
-     * 
+     *
      * @param query The query builder object
      * @param array joiners An array of strings that will be used to join the tables.
      * @param array except This is an array of tables that you don't want to join.
-     * 
+     *
      * @return The query builder object.
      */
     public function scopeJoinWith($query, array $joiners, array $except = [])
@@ -77,7 +77,7 @@ trait BuilderTrait
     }
 
     /**
-     * It takes the fillable columns of the current class and 
+     * It takes the fillable columns of the current class and
      * adds the plural form of the table name as a prefix to each column
      */
     public function scopeSelectBaseTable($query)
