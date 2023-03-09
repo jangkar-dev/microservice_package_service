@@ -1,9 +1,8 @@
 <?php
 
-
 namespace jangkardev\Traits;
 
-use App\Services\FilterService;
+use jangkardev\Services\FilterService;
 
 trait FilterTrait
 {
