@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use InvalidArgumentException;
+use SebastianBergmann\Type\NullType;
 use Symfony\Component\HttpFoundation\Response;
 
 trait RepositoryTrait
@@ -26,7 +27,7 @@ trait RepositoryTrait
     public static function query(): self
     {
         $class = __CLASS__;
-        return new $class();
+        return (new static);
     }
 
     public static function model($model = null): self
@@ -107,7 +108,7 @@ trait RepositoryTrait
         return $this->model;
     }
 
-    public static function get(): collection
+    public static function get(): Model | NullType
     {
         return self::request([])->get();
     }
