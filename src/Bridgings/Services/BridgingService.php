@@ -1,6 +1,6 @@
 <?php
 
-namespace Bridgings\Services;
+namespace jangkardev\Bridgings\Services;
 
 use App\Models\Bridging;
 use Illuminate\Database\Query\Builder;

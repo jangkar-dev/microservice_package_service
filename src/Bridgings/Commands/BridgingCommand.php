@@ -1,6 +1,6 @@
 <?php
 
-namespace Bridgings\Commands;
+namespace jangkardev\Bridgings\Commands;
 
 use App\Services\BotService;
 use Carbon\Carbon;

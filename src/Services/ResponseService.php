@@ -1,6 +1,6 @@
 <?php
 
-namespace Services;
+namespace jangkardev\Services;
 
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;

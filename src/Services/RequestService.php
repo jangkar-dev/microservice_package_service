@@ -1,6 +1,6 @@
 <?php
 
-namespace Services;
+namespace jangkardev\Services;
 
 use App\Http\Resources\AuthResource;
 use Illuminate\Support\Facades\Http;

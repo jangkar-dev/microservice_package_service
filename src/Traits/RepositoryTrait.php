@@ -1,22 +1,22 @@
 <?php
 
-namespace Traits;
+namespace jangkardev\Traits;
 
-use App\Http\Requests\FormRequest;
 use App\Models\Bridging;
-use App\Services\ResponseService;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Http\FormRequest as HttpFormRequest;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
+use App\Services\ResponseService;
+use Illuminate\Http\JsonResponse;
+use App\Http\Requests\FormRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Session;
-use InvalidArgumentException;
 use SebastianBergmann\Type\NullType;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Database\Eloquent\Builder;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Foundation\Http\FormRequest as HttpFormRequest;
 
 trait RepositoryTrait
 {

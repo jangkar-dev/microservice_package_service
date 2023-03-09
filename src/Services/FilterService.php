@@ -1,6 +1,6 @@
 <?php
 
-namespace Services;
+namespace jangkardev\Services;
 
 use App\Models\User;
 use Carbon\Carbon;

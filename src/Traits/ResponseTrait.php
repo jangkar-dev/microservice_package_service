@@ -1,6 +1,6 @@
 <?php
 
-namespace Traits;
+namespace jangkardev\Traits;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Resources\MissingValue;

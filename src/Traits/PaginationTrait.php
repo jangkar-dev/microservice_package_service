@@ -1,6 +1,6 @@
 <?php
 
-namespace Traits;
+namespace jangkardev\Traits;
 
 /* A trait that allows you to paginate your data. */
 

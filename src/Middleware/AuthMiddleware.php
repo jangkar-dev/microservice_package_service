@@ -1,6 +1,6 @@
 <?php
 
-namespace Middleware;
+namespace jangkardev\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;

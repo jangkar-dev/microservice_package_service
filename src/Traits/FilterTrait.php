@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Traits;
+namespace jangkardev\Traits;
 
 use App\Services\FilterService;
 
