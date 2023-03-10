@@ -5,7 +5,6 @@ namespace jangkardev\Traits;
 use App\Models\Bridging;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
-use App\Services\ResponseService;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\FormRequest;
 use Illuminate\Support\Collection;
@@ -17,6 +16,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Database\Eloquent\Builder;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Foundation\Http\FormRequest as HttpFormRequest;
+use jangkardev\Services\ResponseService;
 
 trait RepositoryTrait
 {
@@ -27,12 +27,12 @@ trait RepositoryTrait
     public static function query(): self
     {
         $class = __CLASS__;
-        return (new static);
+        return (new static());
     }
 
     public static function model($model = null): self
     {
-        return (new static)->setModel($model);
+        return (new static())->setModel($model);
     }
 
     public function compact($request): self
@@ -68,7 +68,7 @@ trait RepositoryTrait
         $filteredRequest = self::rule($requestData);
 
         // Return a new instance of the current class with the modified request and pagination limit.
-        return (new static)->setRequest($filteredRequest, $perPage);
+        return (new static())->setRequest($filteredRequest, $perPage);
     }
 
     public function setRequest($request, $per_page = null)
@@ -86,8 +86,7 @@ trait RepositoryTrait
             } else {
                 $this->model = $model;
             }
-        }
-        else{
+        } else {
             throw new InvalidArgumentException('Invalid model. Expected a int or model.');
         }
         return $this;
@@ -130,7 +129,7 @@ trait RepositoryTrait
         return $words;
     }
 
-    public function storeRule():self
+    public function storeRule(): self
     {
         return $this;
     }
@@ -211,7 +210,7 @@ trait RepositoryTrait
         $default_user  = Session::get('user')->id ?? 1;
         $request['created_by']  = $request['created_by'] ?? $default_user;
         $request['updated_by']  = $request['updated_by'] ?? $default_user;
-        return (new static)->actionSetter('store', $request);
+        return (new static())->actionSetter('store', $request);
     }
 
     /**
@@ -225,7 +224,7 @@ trait RepositoryTrait
         if (!is_array($request)) {
             $request = $request->validated();
         }
-        return (new static)->actionSetter('batch', $request);
+        return (new static())->actionSetter('batch', $request);
     }
 
     public function fill(Request | array | HttpFormRequest | Collection  $request): self
